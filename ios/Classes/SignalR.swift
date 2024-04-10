@@ -99,6 +99,23 @@ class SignalRWrapper {
             result(FlutterError(code: "Error", message: "SignalR Connection not found or null", details: "Connect SignalR before listening a Hub method"))
         }
     }
+    
+    func tryToGetJsonData(input: Any?) -> Data? {
+        guard let input = input else {
+            return nil
+        }
+  
+        if !JSONSerialization.isValidJSONObject(input) {
+            return nil
+        }
+
+        do {
+            let jsonData = try JSONSerialization.data(withJSONObject: input, options: [])
+            return jsonData
+        } catch {
+            return nil
+        }
+    }
 
     func invokeServerMethod(arguments: [String: Any], result: @escaping FlutterResult) {
         guard let methodName = arguments["methodName"] as? String else {
@@ -112,7 +129,19 @@ class SignalRWrapper {
                     if let error = error {
                         result(FlutterError(code: "Error", message: String(describing: error), details: nil))
                     } else {
-                        result(res)
+                        let jsonData = self.tryToGetJsonData(input: res)
+
+                        if jsonData == nil {
+                            if res != nil {
+                                let intResult = res as! Int
+                                result(String(intResult))
+                            } else {
+                                result("")
+                            }
+                        } else {
+                            let jsonString = String(data: jsonData!, encoding: .utf8)
+                            result(jsonString ?? "")
+                        }
                     }
                 })
             } else {
