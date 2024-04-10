@@ -10,6 +10,7 @@ import microsoft.aspnet.signalr.client.hubs.HubProxy
 import microsoft.aspnet.signalr.client.transport.LongPollingTransport
 import microsoft.aspnet.signalr.client.transport.ServerSentEventsTransport
 import android.util.Log
+import com.google.gson.JsonElement
 
 
 enum class CallMethod(val value: String) {
@@ -53,10 +54,10 @@ object SignalR {
                 hub?.on(methodName, { res ->
                     Handler(Looper.getMainLooper()).post {
                         Log.d("SignalR2", "SignalR2 NewMsg")
-
-                        SignalRFlutterPlugin.channel.invokeMethod("NewMessage", listOf(methodName, res))
+                        val result = res.toString()
+                        SignalRFlutterPlugin.channel.invokeMethod("NewMessage", listOf(methodName, result))
                     }
-                }, Any::class.java)
+                }, JsonElement::class.java)
             }
 
             connection?.connected {
@@ -171,9 +172,10 @@ object SignalR {
             hubs[connectionId]?.on(methodName, { res ->
                 println("SignalR3 - " + methodName)
                 Handler(Looper.getMainLooper()).post {
-                    SignalRFlutterPlugin.channel.invokeMethod("NewMessage", listOf(methodName, res))
+                    val result = res.toString()
+                    SignalRFlutterPlugin.channel.invokeMethod("NewMessage", listOf(methodName, result))
                 }
-            }, Any::class.java)
+            }, JsonElement::class.java)
         } catch (ex: Exception) {
             println("SignalR3 ERROR")
             result.error("Error", ex.localizedMessage, null)
@@ -182,11 +184,11 @@ object SignalR {
 
     fun invokeServerMethod(connectionId: String, methodName: String, args: List<Any>, result: Result) {
         try {
-            val res: SignalRFuture<Any>? = hubs[connectionId]?.invoke(Any::class.java, methodName, *args.toTypedArray())
+            val res: SignalRFuture<JsonElement>? = hubs[connectionId]?.invoke(JsonElement::class.java, methodName, *args.toTypedArray())
 
-            res?.done { msg: Any? ->
+            res?.done { msg: JsonElement? ->
                 Handler(Looper.getMainLooper()).post {
-                    result.success(msg)
+                    result.success(msg.toString() ?: "")
                 }
             }
 
