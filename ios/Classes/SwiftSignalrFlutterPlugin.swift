@@ -36,6 +36,7 @@ public class SwiftSignalRFlutterPlugin: NSObject, FlutterPlugin {
 
         case CallMethod.stop.rawValue:
             instance.stop(result: result)
+            signalRInstances[id] = nil
 
         case CallMethod.isConnected.rawValue:
             instance.isConnected(result: result)
