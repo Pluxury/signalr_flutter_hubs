@@ -50,7 +50,15 @@ class SignalRWrapper {
         if let hubMethods = arguments["hubMethods"] as? [String] {
             hubMethods.forEach { (methodName) in
                 hub.on(methodName) { (args) in
-                    SwiftSignalRFlutterPlugin.channel.invokeMethod("NewMessage", arguments: [methodName, args?[0]])
+//                    SwiftSignalRFlutterPlugin.channel.invokeMethod("NewMessage", arguments: [methodName, args?[0]])
+                    guard let args = args, !args.isEmpty else {
+                        SwiftSignalRFlutterPlugin.channel.invokeMethod("NewMessage", arguments: [methodName, "null or empty"])
+                        return
+                    }
+                    
+                    let jsonData = try? JSONSerialization.data(withJSONObject: args[0], options: [])
+                    let jsonString = String(data: jsonData!, encoding: .utf8)
+                    SwiftSignalRFlutterPlugin.channel.invokeMethod("NewMessage", arguments: [methodName, jsonString ?? ""])
                 }
             }
         }
