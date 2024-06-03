@@ -55,7 +55,7 @@ object SignalR {
                     Handler(Looper.getMainLooper()).post {
                         Log.d("SignalR2", "SignalR2 NewMsg")
                         val result = res.toString()
-                        SignalRFlutterPlugin.channel.invokeMethod("NewMessage", listOf(methodName, result))
+                        SignalRFlutterPlugin.channel.invokeMethod("NewMessage", listOf(hubName, methodName, result))
                     }
                 }, JsonElement::class.java)
             }
@@ -64,7 +64,7 @@ object SignalR {
                 Handler(Looper.getMainLooper()).post {
                     if(connection != null) {
                         Log.d("SignalR2", "SignalR2 Connected")
-                        SignalRFlutterPlugin.channel.invokeMethod("ConnectionStatus", "Connected")
+                        SignalRFlutterPlugin.channel.invokeMethod("ConnectionStatus", listOf(hubName, "Connected"))
                     }
                 }
             }
@@ -74,7 +74,7 @@ object SignalR {
                     if(connection != null) {
                         Log.d("SignalR2", "SignalR2 Reconnected")
 
-                        SignalRFlutterPlugin.channel.invokeMethod("ConnectionStatus", "Reconnected")
+                        SignalRFlutterPlugin.channel.invokeMethod("ConnectionStatus", listOf(hubName, "Reconnected"))
                     }
                 }
             }
@@ -84,7 +84,7 @@ object SignalR {
                     if(connection != null) {
                         Log.d("SignalR2", "SignalR2 Reconnecting")
 
-                        SignalRFlutterPlugin.channel.invokeMethod("ConnectionStatus", "Reconnecting")
+                        SignalRFlutterPlugin.channel.invokeMethod("ConnectionStatus", listOf(hubName, "Reconnecting"))
                     }
                 }
             }
@@ -94,7 +94,7 @@ object SignalR {
                     if(connection != null) {
                         Log.d("SignalR2", "SignalR2 Closed")
 
-                        SignalRFlutterPlugin.channel.invokeMethod("ConnectionStatus", "Disconnected")
+                        SignalRFlutterPlugin.channel.invokeMethod("ConnectionStatus",  listOf(hubName, "Disconnected"))
                     }
                 }
             }
@@ -103,7 +103,7 @@ object SignalR {
                 Handler(Looper.getMainLooper()).post {
                     Log.d("SignalR2", "SignalR2 Slow")
 
-                    SignalRFlutterPlugin.channel.invokeMethod("ConnectionStatus", "Slow")
+                    SignalRFlutterPlugin.channel.invokeMethod("ConnectionStatus",  listOf(hubName, "Slow"))
                 }
             }
 
@@ -111,7 +111,7 @@ object SignalR {
                 Handler(Looper.getMainLooper()).post {
                     Log.d("SignalR2", "SignalR2 Error " + handler.localizedMessage)
 
-                    SignalRFlutterPlugin.channel.invokeMethod("ConnectionStatus", "Error: " + handler.localizedMessage)
+                    SignalRFlutterPlugin.channel.invokeMethod("ConnectionStatus",  listOf(hubName, "Error: " + handler.localizedMessage))
                 }
             }
 
