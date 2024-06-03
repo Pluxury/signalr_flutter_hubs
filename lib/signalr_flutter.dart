@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/services.dart';
+import 'package:signalr_flutter/signalr_plugin.dart';
 
 //Joe's CHANGES
 /// Transport method of the signalr connection.
@@ -24,10 +25,6 @@ class SignalR {
   /// This callback gets called whenever SignalR server sends some message to client.
   final Function(String?, dynamic)? hubCallback;
 
-  static const MethodChannel _channel = const MethodChannel('signalR');
-
-  static const String CONNECTION_STATUS = "ConnectionStatus";
-  static const String NEW_MESSAGE = "NewMessage";
   final String connectionId;
 
   SignalR(this.connectionId, this.baseUrl, this.hubName,
@@ -45,7 +42,7 @@ class SignalR {
   /// [queryString] is a optional field to send query to server.
   Future<bool?> connect() async {
     try {
-      final result = await _channel.invokeMethod<bool>("connectToServer", <String, dynamic>{
+      final result = await SignalrPlugin.channel.invokeMethod<bool>("connectToServer", <String, dynamic>{
         'Id': connectionId,
         'baseUrl': baseUrl,
         'hubName': hubName,
@@ -55,7 +52,10 @@ class SignalR {
         'transport': transport.index
       });
 
-      _signalRCallbackHandler();
+      SignalrPlugin.addHubCallback(hubName, hubCallback);
+      SignalrPlugin.addStatusChangeCallback(hubName, statusChangeCallback);
+
+      SignalrPlugin.listenHubMessage();
 
       return result;
     } on PlatformException catch (ex) {
@@ -70,7 +70,7 @@ class SignalR {
   /// Try to Reconnect SignalR connection if it gets disconnected.
   void reconnect() async {
     try {
-      await _channel.invokeMethod("reconnect", <String, dynamic>{'Id': connectionId});
+      await SignalrPlugin.channel.invokeMethod("reconnect", <String, dynamic>{'Id': connectionId});
     } on PlatformException catch (ex) {
       print("Platform Error: ${ex.message}");
       return Future.error(ex.message!);
@@ -83,7 +83,7 @@ class SignalR {
   /// Stop SignalR connection
   void stop() async {
     try {
-      await _channel.invokeMethod("stop", <String, dynamic>{'Id': connectionId});
+      await SignalrPlugin.channel.invokeMethod("stop", <String, dynamic>{'Id': connectionId});
     } on PlatformException catch (ex) {
       print("Platform Error: ${ex.message}");
       return Future.error(ex.message!);
@@ -95,7 +95,7 @@ class SignalR {
 
   Future<bool?> get isConnected async {
     try {
-      return await _channel.invokeMethod<bool>("isConnected", <String, dynamic>{'Id': connectionId});
+      return await SignalrPlugin.channel.invokeMethod<bool>("isConnected", <String, dynamic>{'Id': connectionId});
     } on PlatformException catch (ex) {
       print("Platform Error: ${ex.message}");
       return Future.error(ex.message!);
@@ -111,7 +111,8 @@ class SignalR {
   /// Subscribe to a Hub method. Every subsequent message from server gets called on [hubCallback].
   void subscribeToHubMethod(String methodName) async {
     try {
-      await _channel.invokeMethod("listenToHubMethod", <String, dynamic>{'Id': connectionId, 'methodName': methodName});
+      await SignalrPlugin.channel
+          .invokeMethod("listenToHubMethod", <String, dynamic>{'Id': connectionId, 'methodName': methodName});
     } on PlatformException catch (ex) {
       print("Platform Error: ${ex.message}");
       return Future.error(ex.message!);
@@ -124,7 +125,7 @@ class SignalR {
   /// Invoke any server method with optional [arguments].
   Future<T?> invokeMethod<T>(String methodName, {List<dynamic>? arguments}) async {
     try {
-      final result = await _channel.invokeMethod<T>("invokeServerMethod",
+      final result = await SignalrPlugin.channel.invokeMethod<T>("invokeServerMethod",
           <String, dynamic>{'Id': connectionId, 'methodName': methodName, 'arguments': arguments ?? List.empty()});
       return result;
     } on PlatformException catch (ex) {
@@ -134,25 +135,5 @@ class SignalR {
       print("Error: ${ex.toString()}");
       return Future.error(ex.toString());
     }
-  }
-
-  /// Listen for any message from native side and pass that to proper callbacks.
-  void _signalRCallbackHandler() {
-    _channel.setMethodCallHandler((call) {
-      switch (call.method) {
-        case CONNECTION_STATUS:
-          statusChangeCallback!(call.arguments);
-          break;
-        case NEW_MESSAGE:
-          if (call.arguments is List) {
-            hubCallback!(call.arguments[0], call.arguments[1]);
-          } else {
-            hubCallback!("", call.arguments);
-          }
-          break;
-        default:
-      }
-      return Future.value();
-    });
   }
 }

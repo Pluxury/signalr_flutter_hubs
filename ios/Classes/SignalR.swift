@@ -52,13 +52,13 @@ class SignalRWrapper {
                 hub.on(methodName) { (args) in
 //                    SwiftSignalRFlutterPlugin.channel.invokeMethod("NewMessage", arguments: [methodName, args?[0]])
                     guard let args = args, !args.isEmpty else {
-                        SwiftSignalRFlutterPlugin.channel.invokeMethod("NewMessage", arguments: [methodName, "null or empty"])
+                        SwiftSignalRFlutterPlugin.channel.invokeMethod("NewMessage", arguments: [hubName, methodName, "null or empty"])
                         return
                     }
                     
                     let jsonData = try? JSONSerialization.data(withJSONObject: args[0], options: [])
                     let jsonString = String(data: jsonData!, encoding: .utf8)
-                    SwiftSignalRFlutterPlugin.channel.invokeMethod("NewMessage", arguments: [methodName, jsonString ?? ""])
+                    SwiftSignalRFlutterPlugin.channel.invokeMethod("NewMessage", arguments: [hubName, methodName, jsonString ?? ""])
                 }
             }
         }
@@ -103,13 +103,13 @@ class SignalRWrapper {
             hub.on(methodName) { (args) in
 //                SwiftSignalRFlutterPlugin.channel.invokeMethod("NewMessage", arguments: [methodName, args?[0]])
                 guard let args = args, !args.isEmpty else {
-                    SwiftSignalRFlutterPlugin.channel.invokeMethod("NewMessage", arguments: [methodName, "null or empty"])
+                    SwiftSignalRFlutterPlugin.channel.invokeMethod("NewMessage", arguments: [hubName, methodName, "null or empty"])
                     return
                 }
                 
                 let jsonData = try? JSONSerialization.data(withJSONObject: args[0], options: [])
                 let jsonString = String(data: jsonData!, encoding: .utf8)
-                SwiftSignalRFlutterPlugin.channel.invokeMethod("NewMessage", arguments: [methodName, jsonString ?? ""])
+                SwiftSignalRFlutterPlugin.channel.invokeMethod("NewMessage", arguments: [hubName, methodName, jsonString ?? ""])
             }
         } else {
             result(FlutterError(code: "Error", message: "SignalR Connection not found or null", details: "Connect SignalR before listening a Hub method"))
@@ -171,38 +171,38 @@ class SignalRWrapper {
     private func configureConnectionCallbacks() {
         connection.starting = { [weak self] in
             print("SignalR Connecting. Current Status: \(String(describing: self?.connection.state.stringValue))")
-            SwiftSignalRFlutterPlugin.channel.invokeMethod("ConnectionStatus", arguments: "Connecting")
+            SwiftSignalRFlutterPlugin.channel.invokeMethod("ConnectionStatus", arguments: [hubName, "Connecting"])
         }
 
         connection.reconnecting = { [weak self] in
             print("SignalR Reconnecting. Current Status: \(String(describing: self?.connection.state.stringValue))")
-            SwiftSignalRFlutterPlugin.channel.invokeMethod("ConnectionStatus", arguments: "Reconnecting")
+            SwiftSignalRFlutterPlugin.channel.invokeMethod("ConnectionStatus", arguments: arguments: [hubName, "Reconnecting"])
         }
 
         connection.connected = { [weak self] in
             print("SignalR Connected. Connection ID: \(String(describing: self?.connection.connectionID))")
-            SwiftSignalRFlutterPlugin.channel.invokeMethod("ConnectionStatus", arguments: "Connected")
+            SwiftSignalRFlutterPlugin.channel.invokeMethod("ConnectionStatus", arguments: [hubName, "Connected"])
         }
 
         connection.reconnected = { [weak self] in
             print("SignalR Reconnected...")
             print("Connection ID: \(String(describing: self?.connection.connectionID))")
-            SwiftSignalRFlutterPlugin.channel.invokeMethod("ConnectionStatus", arguments: "Reconnected")
+            SwiftSignalRFlutterPlugin.channel.invokeMethod("ConnectionStatus", arguments: [hubName, "Reconnected"])
         }
 
         connection.disconnected = { [weak self] in
             print("SignalR Disconnected...")
-            SwiftSignalRFlutterPlugin.channel.invokeMethod("ConnectionStatus", arguments: "Disconnected")
+            SwiftSignalRFlutterPlugin.channel.invokeMethod("ConnectionStatus", arguments: [hubName, "Disconnected"])
         }
 
         connection.connectionSlow = {
             print("Connection slow...")
-            SwiftSignalRFlutterPlugin.channel.invokeMethod("ConnectionStatus", arguments: "Slow")
+            SwiftSignalRFlutterPlugin.channel.invokeMethod("ConnectionStatus", arguments: [hubName, "Slow"])
         }
 
         connection.error = { [weak self] error in
             print("Error: \(String(describing: error))")
-            SwiftSignalRFlutterPlugin.channel.invokeMethod("ConnectionStatus", arguments: "Error: \(String(describing: error))")
+            SwiftSignalRFlutterPlugin.channel.invokeMethod("ConnectionStatus", arguments: [hubName, "Error: \(String(describing: error))"] )
             if let source = error?["source"] as? String, source == "TimeoutException" {
                 print("Connection timed out. Restarting...")
                 self?.connection.start()

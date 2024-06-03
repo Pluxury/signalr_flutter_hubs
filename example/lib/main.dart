@@ -44,7 +44,7 @@ class _MyAppState extends State<MyApp> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              Text('Connection Status: $_signalRStatus\n', style: Theme.of(context).textTheme.headline5),
+              Text('Connection Status: $_signalRStatus\n', style: Theme.of(context).textTheme.bodyLarge),
               Padding(
                 padding: const EdgeInsets.only(top: 20.0),
                 child: ElevatedButton(onPressed: _buttonTapped, child: Text("Invoke Method")),
